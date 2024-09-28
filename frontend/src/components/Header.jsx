@@ -13,7 +13,7 @@ function Header() {
     };
   return (
     <div className='bg-gray-900 text-white p-10'>
-        <h1 className="text-4xl mb-2 font-bold">Welcome back Riva!</h1>
+        <h1 className="text-4xl mb-2 font-bold">Welcome Back Riva!</h1>
       <p className="text-lg mb-6 text-[#516778]">This is your financial overview report</p>
 
       <div className="flex gap-4">

@@ -6,7 +6,7 @@ import moment from 'moment';
 import Nav from './Nav'
 import Header from './Header'
 
-const BillsPage = () => {
+const Bills = () => {
   // Initial dummy data for the upcoming bills
   const initialBills = [
     {
@@ -215,4 +215,4 @@ const BillsPage = () => {
   );
 };
 
-export default BillsPage;
+export default Bills;

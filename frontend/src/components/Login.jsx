@@ -1,12 +1,13 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-const LoginForm = () => {
+const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-900 via-black to-blue-900">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-3xl font-bold mb-4">Log in to your account</h2>
         <p className="text-gray-600 mb-6">
-          Don't have an account? <a href="#" className="text-blue-600 font-medium">Sign up</a>
+          Don't have an account? <Link to="/signup" className="text-blue-600 font-medium">Sign up</Link>
         </p>
         
         <form>
@@ -44,12 +45,14 @@ const LoginForm = () => {
           </div>
           
           <div className="mb-6">
+            <Link to ="/overview">
             <button 
               type="submit" 
               className="w-full py-2 px-4 bg-black text-white rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Log in
-            </button>
+            </button></Link>
+            
           </div>
           
           <p className="text-xs text-gray-500">
@@ -61,4 +64,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default Login;

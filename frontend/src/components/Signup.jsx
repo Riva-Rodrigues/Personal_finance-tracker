@@ -1,12 +1,13 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-const SignupForm = () => {
+const Signup = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-900 via-black to-blue-900">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-3xl font-bold mb-4">Create an account</h2>
         <p className="text-gray-600 mb-6">
-          Already have an account? <a href="#" className="text-blue-600 font-medium">Log in</a>
+          Already have an account? <Link to="/login" className="text-blue-600 font-medium">Log in</Link>
         </p>
         
         <form>
@@ -57,4 +58,4 @@ const SignupForm = () => {
   );
 };
 
-export default SignupForm;
+export default Signup;

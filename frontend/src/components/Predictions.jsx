@@ -4,7 +4,7 @@ import 'chart.js/auto';
 import Nav from './Nav'
 import Header from './Header'
 
-const FinancialOverview = () => {
+const Prediction = () => {
 
 
   // const chartData = {
@@ -89,4 +89,4 @@ const FinancialOverview = () => {
   );
 };
 
-export default FinancialOverview;
+export default Prediction;

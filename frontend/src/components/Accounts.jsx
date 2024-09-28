@@ -3,7 +3,7 @@ import { Table } from "antd";
 import Nav from './Nav'
 import Header from './Header'
 
-const AccountPage = () => {
+const Account = () => {
   // Define the data structure for transactions
   const transactionData = [
     { key: "1", category: "Food and Drink, Restaurant", payee: "Tectra Inc", date: "2024/04/01", amount: "+$750.00" },
@@ -96,4 +96,4 @@ const AccountPage = () => {
   );
 };
 
-export default AccountPage;
+export default Account;

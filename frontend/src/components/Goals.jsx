@@ -23,7 +23,7 @@ ChartJS.register(
   Legend
 );
 
-const Dashboard = () => {
+const Goals = () => {
   const doughnutData = {
     labels: ['Achieved', 'Remaining'],
     datasets: [
@@ -141,4 +141,4 @@ const ExpenseCategory = ({ name, amount }) => {
   );
 };
 
-export default Dashboard;
+export default Goals;
