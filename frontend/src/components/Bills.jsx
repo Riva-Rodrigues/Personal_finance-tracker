@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { Table, Button, Modal, Input, DatePicker } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Modal, Input, DatePicker, message } from 'antd';
 import { PlusOutlined, MoreOutlined } from '@ant-design/icons';
-import 'antd/dist/reset.css'; // Reset Ant Design default styles
+import 'antd/dist/reset.css';
 import moment from 'moment';
 import Nav from './Nav'
 import Header from './Header'
 
 const Bills = () => {
-  // Initial dummy data for the upcoming bills
   const initialBills = [
     {
       dueDate: '2024/07/15',
@@ -32,7 +31,6 @@ const Bills = () => {
     },
   ];
 
-  // State to manage the modal visibility, form values, and bills data
   const [bills, setBills] = useState(initialBills);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newBill, setNewBill] = useState({
@@ -43,36 +41,57 @@ const Bills = () => {
     amount: '',
   });
 
-  // Function to handle showing the modal
+  useEffect(() => {
+    checkDueBills();
+  }, [bills]);
+
+  const checkDueBills = () => {
+    const today = moment().format('YYYY/MM/DD');
+    const dueBills = bills.filter(bill => bill.dueDate === today);
+    
+    if (dueBills.length > 0) {
+      if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            dueBills.forEach(bill => {
+              new Notification('Bill Due Today', {
+                body: `${bill.item} - ${bill.amount} is due today!`,
+              });
+            });
+          }
+        });
+      }
+      
+      dueBills.forEach(bill => {
+        message.warning(`${bill.item} - ${bill.amount} is due today!`);
+      });
+    }
+  };
+
   const showModal = () => {
     setIsModalVisible(true);
   };
 
-  // Function to handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewBill({ ...newBill, [name]: value });
   };
 
-  // Function to handle date changes
   const handleDateChange = (date, dateString, fieldName) => {
     setNewBill({ ...newBill, [fieldName]: dateString });
   };
 
-  // Function to handle form submission (adding a new bill)
   const handleAddBill = (e) => {
-    e.preventDefault(); // Prevent form submission
-    setBills([...bills, { ...newBill, key: bills.length }]); // Add new bill to the existing list
-    setIsModalVisible(false); // Close the modal
-    setNewBill({ dueDate: '', item: '', description: '', lastCharge: '', amount: '' }); // Reset form
+    e.preventDefault();
+    setBills([...bills, { ...newBill, key: bills.length }]);
+    setIsModalVisible(false);
+    setNewBill({ dueDate: '', item: '', description: '', lastCharge: '', amount: '' });
   };
 
-  // Modal cancel handler
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
-  // Columns for the bills table
   const columns = [
     {
       title: 'Due Date',
@@ -120,97 +139,94 @@ const Bills = () => {
 
   return (
     <>
-    <Nav />
-    <Header />
-    <div className="min-h-screen bg-gray-900 text-white px-10">
-      {/* Upcoming Bills */}
-      <section>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold text-white">Upcoming Bills</h2>
-          {/* Add Bill Button */}
-          <Button type="primary" icon={<PlusOutlined />} onClick={showModal}>
-            Add Bill
-          </Button>
-        </div>
-        <div className="rounded-lg overflow-hidden">
-          <Table
-            columns={columns}
-            dataSource={bills}
-            pagination={false}
-            rowClassName="border-b border-gray-600"
-          />
-        </div>
-      </section>
-
-      {/* Add Bill Modal */}
-      <Modal
-        title="Add a New Bill"
-        visible={isModalVisible}
-        onCancel={handleCancel}
-        footer={null}
-      >
-        <form onSubmit={handleAddBill} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Due Date</label>
-            <DatePicker
-              className="w-full"
-              format="YYYY/MM/DD"
-              onChange={(date, dateString) => handleDateChange(date, dateString, 'dueDate')}
-              value={newBill.dueDate ? moment(newBill.dueDate) : null}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Item</label>
-            <Input
-              type="text"
-              name="item"
-              placeholder="E.g. Adobe"
-              value={newBill.item}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Description</label>
-            <Input
-              type="text"
-              name="description"
-              placeholder="E.g. Description of the bill"
-              value={newBill.description}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Last Charge</label>
-            <DatePicker
-              className="w-full"
-              format="YYYY/MM/DD"
-              onChange={(date, dateString) => handleDateChange(date, dateString, 'lastCharge')}
-              value={newBill.lastCharge ? moment(newBill.lastCharge) : null}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-500">Amount</label>
-            <Input
-              type="text"
-              name="amount"
-              placeholder="E.g. $200"
-              value={newBill.amount}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button type="primary" htmlType="submit">
+      <Nav />
+      <Header />
+      <div className="min-h-screen bg-gray-900 text-white px-10">
+        <section>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-white">Upcoming Bills</h2>
+            <Button type="primary" icon={<PlusOutlined />} onClick={showModal} className='bg-[#155EEF]'>
               Add Bill
             </Button>
           </div>
-        </form>
-      </Modal>
-    </div>
+          <div className="rounded-lg overflow-hidden">
+            <Table
+              columns={columns}
+              dataSource={bills}
+              pagination={false}
+              rowClassName="border-b border-gray-600"
+            />
+          </div>
+        </section>
+
+        <Modal
+          title="Add a New Bill"
+          visible={isModalVisible}
+          onCancel={handleCancel}
+          footer={null}
+        >
+          <form onSubmit={handleAddBill} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Due Date</label>
+              <DatePicker
+                className="w-full"
+                format="YYYY/MM/DD"
+                onChange={(date, dateString) => handleDateChange(date, dateString, 'dueDate')}
+                value={newBill.dueDate ? moment(newBill.dueDate) : null}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Item</label>
+              <Input
+                type="text"
+                name="item"
+                placeholder="E.g. Adobe"
+                value={newBill.item}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Description</label>
+              <Input
+                type="text"
+                name="description"
+                placeholder="E.g. Description of the bill"
+                value={newBill.description}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Last Charge</label>
+              <DatePicker
+                className="w-full"
+                format="YYYY/MM/DD"
+                onChange={(date, dateString) => handleDateChange(date, dateString, 'lastCharge')}
+                value={newBill.lastCharge ? moment(newBill.lastCharge) : null}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Amount</label>
+              <Input
+                type="text"
+                name="amount"
+                placeholder="E.g. $200"
+                value={newBill.amount}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button type="primary" htmlType="submit">
+                Add Bill
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      </div>
     </>
   );
 };

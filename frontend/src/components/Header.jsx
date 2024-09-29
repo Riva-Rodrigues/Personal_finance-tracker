@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ChatModal from './ChatModal'; // Import the ChatModal
 
 function Header({ selectedAccount, handleAccountChange }) {
+  const [isChatVisible, setChatVisible] = useState(false);
+
   return (
     <div className='bg-gray-900 text-white p-10'>
       <h1 className="text-4xl mb-2 font-bold">Welcome Back Riva!</h1>
@@ -16,7 +19,16 @@ function Header({ selectedAccount, handleAccountChange }) {
           <option value="Savings Account">Savings Account</option>
           <option value="Checking Account">Checking Account</option>
         </select>
+        
+        <button 
+          className="bg-[#0B1739] text-white py-2 px-4 rounded-xl"
+          onClick={() => setChatVisible(true)}
+        >
+          Open Chat
+        </button>
       </div>
+
+      <ChatModal visible={isChatVisible} onClose={() => setChatVisible(false)} />
     </div>
   );
 }

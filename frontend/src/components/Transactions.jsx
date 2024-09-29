@@ -3,6 +3,7 @@ import { Table, Modal, Input, Select, DatePicker, Button } from "antd";
 import moment from "moment";
 import Nav from './Nav'
 import Header from './Header'
+import { DownloadOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -23,10 +24,10 @@ const columns = [
 
 const Transactions = () => {
   const [transactionData, setTransactionData] = useState([
-    { key: "1", category: "Food and Drink, Restaurant", payee: "Tectra Inc", date: "2024/04/01", amount: "+$750.00", account: "Plaid Credit Card" },
-    { key: "2", category: "Clothing", payee: "Merchant", date: "2024/04/01", amount: "-$250.00", account: "Checking" },
-    { key: "3", category: "Food", payee: "Merchant", date: "2024/04/01", amount: "+$750.00", account: "Checking" },
-    { key: "4", category: "Utilities", payee: "Tectra Inc", date: "2024/04/01", amount: "+$850.00", account: "Plaid Credit Card" },
+    { key: "1", category: "Food and Drink", payee: "Tectra Inc", date: "2024-04-01", amount: "750.00", account: "Plaid Credit Card" },
+    { key: "2", category: "Clothing", payee: "Merchant", date: "2024-04-01", amount: "250.00", account: "Checking" },
+    { key: "3", category: "Food", payee: "Merchant", date: "2024-04-01", amount: "750.00", account: "Checking" },
+    { key: "4", category: "Utilities", payee: "Tectra Inc", date: "2024-04-01", amount: "850.00", account: "Plaid Credit Card" },
   ]);
   
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -65,6 +66,34 @@ const Transactions = () => {
   const handleDateChange = (date, dateString) => {
     handleInputChange("date", dateString);
   };
+  
+  const downloadCSV = () => {
+    const headers = columns.map(column => column.title);
+    const csvContent = [
+      headers.join(','),
+      ...transactionData.map(row => 
+        columns.map(column => {
+          if (column.dataIndex === 'date') {
+            // Format the date as YYYY-MM-DD
+            return moment(row[column.dataIndex], "YYYY/MM/DD").format("YYYY-MM-DD");
+          }
+          return row[column.dataIndex];
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'transactions.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   return (
     <>
@@ -73,12 +102,18 @@ const Transactions = () => {
     <div className="min-h-screen bg-gray-900 text-white px-10">
       
       {/* Filter and Add Button */}
-      <div>
+      <div className="flex justify-between">
         <button 
           className="bg-[#0B1739] text-white py-3 px-6 rounded-xl" 
           onClick={showModal}
         >
           Add transaction
+        </button>
+        <button 
+          className="bg-[#0B1739] text-white py-3 px-6 rounded-xl flex items-center"
+          onClick={downloadCSV}
+        >
+          <DownloadOutlined className="mr-2" /> Download CSV
         </button>
       </div>
 

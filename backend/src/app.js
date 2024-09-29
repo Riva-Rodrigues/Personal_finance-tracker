@@ -25,4 +25,6 @@ app.use(cookieParser())
 import userRouter from "./routes/user.routes.js";
 app.use("/api/v1/users", userRouter)
 
+import { sendMessage } from "./controllers/chat.controller.js";
+app.post("/api/v1/send-message", sendMessage)
 export {app}
