@@ -23,57 +23,35 @@ const generateAccessAndRefereshTokens = async(userId) =>{
 }
 
 
-export const registerUser = asyncHandler(async (req,res) =>{
-   //get user details from frontend 
-   //validation- not empty
-   //check if user already exists
-   //check for images
-   //upload them to cloudinary
-   //create user object - entry in db
-   //remove password and refresh token field from response
-   //check for user creation
-   //return res
+export const registerUser = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
 
+  console.log('Received registration data:', { username, email, password });
 
-   const {username, fullName, email, password} = req.body
-   console.log(email)
-   if ([username,email,password].some(field=>field?.trim() ==="")) { 
-        throw new ApiError(400, "All fields are required")
-   } 
+  if ([username, email, password].some(field => field?.trim() === "")) {
+      throw new ApiError(400, "All fields are required");
+  }
 
-   const userExists =  await User.findOne({
-    $or : [{username}, {email}]
-   })
+  const userExists = await User.findOne({ $or: [{ username }, { email }] });
+  console.log('User exists:', userExists);
 
-   if(userExists){
-    throw new ApiError(409, "User with email or username already exists.")
-   }
+  if (userExists) {
+      throw new ApiError(409, "User with email or username already exists.");
+  }
 
-  
+  const user = await User.create({ username, password, email });
+  console.log('User created:', user);
 
-   const user = await User.create(
-      {
-         username: username,
-         password,
-         email
+  const createdUser = await User.findById(user._id).select("-password -refreshToken");
+  console.log('Created user without password:', createdUser);
 
-      }
-   )
+  if (!createdUser) {
+      throw new ApiError(404, "Something went wrong while registering the user.");
+  }
 
-   const createdUser = await User.findById(user._id).select(
-      "-password -refreshToken"
-   )
+  return res.status(201).json(new ApiResponse(200, createdUser, "User registered successfully!"));
+});
 
-   if(!createdUser){
-      throw new ApiError(404, "something went wrong while registering the user.")
-   }
-
-   return res.status(201).json(
-      new ApiResponse(200, createdUser, "User registered successfully!!")
-   )
-
-
-})
 
 export const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
