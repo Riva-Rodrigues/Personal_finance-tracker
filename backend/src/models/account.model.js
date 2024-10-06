@@ -8,40 +8,51 @@ const accountSchema = new Schema(
       required: true,
       index: true,
     },
-    accountName: {
+    bankName: {
       type: String,
       required: true,
       trim: true,
     },
-    balance: {
-      type: Number,
+    branchName: {
+      type: String,
       required: true,
-      default: 0,
+      trim: true,
+    },
+    accountNumber: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+    accountName: {
+      type: String,
+      required: true,
+      trim: true,
     },
     accountType: {
       type: String,
       enum: ['checking', 'savings', 'credit'],
       required: true,
     },
-    
+    balance: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
     budgets: [
       {
         category: {
           type: String,
-          required: true,
           trim: true,
         },
         amount: {
           type: Number,
-          required: true,
         },
         startDate: {
           type: Date,
-          required: true,
         },
         endDate: {
           type: Date,
-          required: true,
         },
       },
     ],
