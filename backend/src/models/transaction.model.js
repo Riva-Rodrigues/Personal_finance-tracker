@@ -21,6 +21,18 @@ const transactionSchema = new Schema(
     },
     category: {
       type: String,
+      enum: [
+        "housing",
+        "utilities",
+        "groceries",
+        "transportation",
+        "healthcare",
+        "savings",
+        "entertainment",
+        "shopping",
+        "education",
+        "miscellaneous"
+      ],
       required: true,
       trim: true,
     },
@@ -37,10 +49,6 @@ const transactionSchema = new Schema(
       type: Date,
       required: true,
       default: Date.now,
-    },
-    description: {
-      type: String,
-      trim: true,
     },
   },
   {
