@@ -1,14 +1,28 @@
-import {Transaction} from '../models/transaction.model.js'
+import { Transaction } from '../models/transaction.model.js';
+import { Account } from '../models/account.model.js'; // Assuming you have an Account model
 
 // Create a new transaction
 export const createTransaction = async (req, res) => {
     try {
-        const userId = req.user.id; // Assuming you set req.user in your verifyJWT middleware
-        const { accountId, type, category, payee, amount, date } = req.body;
+        const userId = req.user.id;
+        const { accountName, type, category, payee, amount, date } = req.body;
+
+        console.log("User ID:", userId);
+        console.log("Account Name:", accountName);
+
+        const account = await Account.findOne({ accountName: accountName, userId });
+        console.log("Account:", account);
+
+        if (!account) {
+            console.log("Account not found for given user and account number");
+            return res.status(404).json({ message: 'Account not found' });
+        }
+
+        console.log("Account id:", account._id);
 
         const newTransaction = new Transaction({
             userId,
-            accountId,
+            accountId: account._id,
             type,
             category,
             payee,
@@ -18,15 +32,44 @@ export const createTransaction = async (req, res) => {
         await newTransaction.save();
         res.status(201).json(newTransaction);
     } catch (error) {
+        console.error("Error creating transaction:", error.message);
         res.status(400).json({ message: error.message });
     }
 };
 
 
+
+
+// import {Transaction} from '../models/transaction.model.js'
+
+// // Create a new transaction
+// export const createTransaction = async (req, res) => {
+//     try {
+//         const userId = req.user.id; // Assuming you set req.user in your verifyJWT middleware
+//         const { accountId, type, category, payee, amount, date } = req.body;
+
+//         const newTransaction = new Transaction({
+//             userId,
+//             accountId,
+//             type,
+//             category,
+//             payee,
+//             amount,
+//             date,
+//         });
+//         await newTransaction.save();
+//         res.status(201).json(newTransaction);
+//     } catch (error) {
+//         res.status(400).json({ message: error.message });
+//     }
+// };
+
+
 // Get all transactions
 export const getTransactions = async (req, res) => {
     try {
-        const transactions = await Transaction.find();
+        const transactions = await Transaction.find()
+                    .populate('accountId', 'accountName'); 
         res.status(200).json(transactions);
     } catch (error) {
         res.status(500).json({ message: error.message });
