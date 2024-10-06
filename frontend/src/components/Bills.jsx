@@ -42,30 +42,52 @@ const Bills = () => {
   });
 
   useEffect(() => {
-    checkDueBills();
+    const checkInterval = setInterval(() => {
+      checkBillsDue();
+    }, 1000 * 60 * 60); // Check every hour
+
+    // Initial check
+    checkBillsDue();
+
+    return () => clearInterval(checkInterval);
   }, [bills]);
 
-  const checkDueBills = () => {
-    const today = moment().format('YYYY/MM/DD');
-    const dueBills = bills.filter(bill => bill.dueDate === today);
+  const checkBillsDue = () => {
+    const today = moment();
     
-    if (dueBills.length > 0) {
-      if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            dueBills.forEach(bill => {
-              new Notification('Bill Due Today', {
-                body: `${bill.item} - ${bill.amount} is due today!`,
-              });
-            });
-          }
-        });
-      }
+    bills.forEach(bill => {
+      const dueDate = moment(bill.dueDate);
+      const daysUntilDue = dueDate.diff(today, 'days');
       
-      dueBills.forEach(bill => {
-        message.warning(`${bill.item} - ${bill.amount} is due today!`);
+      // Check for bills due today
+      if (daysUntilDue === 0) {
+        sendNotification(bill, 'due today');
+      }
+      // Check for bills due tomorrow
+      else if (daysUntilDue === 1) {
+        sendNotification(bill, 'due tomorrow');
+      }
+      // Check for bills due in 2 days
+      else if (daysUntilDue === 2) {
+        sendNotification(bill, 'due in 2 days');
+      }
+    });
+  };
+
+  const sendNotification = (bill, timeframe) => {
+    // Browser notification
+    if ('Notification' in window) {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          new Notification(`Bill ${timeframe}`, {
+            body: `${bill.item} - ${bill.amount} is ${timeframe}!`,
+          });
+        }
       });
     }
+    
+    // In-app notification
+    message.warning(`${bill.item} - ${bill.amount} is ${timeframe}!`);
   };
 
   const showModal = () => {

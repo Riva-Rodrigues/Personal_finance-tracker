@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { Table, Button, Modal, Input, Select } from "antd";
+import React, { useState, useEffect } from "react";
+import { Table, Button, Modal, Input, Select, message } from "antd";
 import { PlusOutlined } from '@ant-design/icons';
 import Nav from './Nav';
 import Header from './Header';
+import axios from 'axios'; // Import axios for making HTTP requests
 
 const { Option } = Select;
 
@@ -15,27 +16,35 @@ const Account = () => {
   // State variables for form inputs
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
+  const [accountName, setAccountName] = useState(''); // Added accountName state
   const [accountType, setAccountType] = useState('');
   const [branchName, setBranchName] = useState('');
   const [balance, setBalance] = useState('');
 
   // State to store the list of accounts
-  const [accounts, setAccounts] = useState([
-    {
-      bankName: 'AB Bank Ltd.',
-      accountType: 'Checking Account',
-      branchName: 'Park Street Branch',
-      accountNumber: '123 567 *** ***',
-      balance: '$20,000',
-    },
-    {
-      bankName: 'CD Bank Ltd.',
-      accountType: 'Savings Account',
-      branchName: 'Main Branch',
-      accountNumber: '987 654 *** ***',
-      balance: '$10,000',
-    },
-  ]);
+  const [accounts, setAccounts] = useState([]);
+
+  // Fetch accounts from backend when component mounts
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/v1/accounts', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Add Bearer token to the request headers
+          },
+        });
+        setAccounts(response.data); // Update accounts state with the fetched data
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          message.error('Unauthorized access. Please log in.');
+        } else {
+          message.error('Failed to fetch accounts. Please try again later.');
+        }
+        console.error(error);
+      }
+    };
+    fetchAccounts();
+  }, []);
 
   // Define the data structure for transactions (static for now)
   const transactionData = [
@@ -82,28 +91,50 @@ const Account = () => {
     setIsModalVisible(true);
   };
 
-  // Handle Modal Ok button
-  const handleOk = () => {
-    if (bankName && accountNumber && accountType && branchName && balance) {
-      // Add new account to the accounts array
-      const newAccount = {
-        bankName,
-        accountNumber,
-        accountType,
-        branchName,
-        balance: `$${balance}`,
-      };
-      setAccounts([...accounts, newAccount]); // Append new account to existing accounts
-
-      // Reset input fields after submission
-      setBankName('');
-      setAccountNumber('');
-      setAccountType('');
-      setBranchName('');
-      setBalance('');
-      setIsModalVisible(false); // Close modal after submission
+  // Handle Modal Ok button (Create account)
+  const handleOk = async () => {
+    
+    if (bankName && accountNumber && accountType && branchName && balance && accountName) { // Check accountName as well
+      try {
+        const newAccount = {
+          bankName,
+          accountNumber,
+          accountName, // Include accountName in the new account object
+          accountType,
+          branchName,
+          balance: parseFloat(balance), // Convert balance to a number
+        };
+  
+        // Send new account data to backend with the Bearer token
+        const response = await axios.post('http://localhost:8000/api/v1/accounts', newAccount, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, 
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        setAccounts([...accounts, response.data]); // Add the new account to the state
+  
+        // Reset input fields after submission
+        setBankName('');
+        setAccountNumber('');
+        setAccountName(''); // Reset accountName
+        setAccountType('');
+        setBranchName('');
+        setBalance('');
+        setIsModalVisible(false); // Close modal after submission
+  
+        message.success('Account created successfully!');
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          message.error('Unauthorized access. Please log in.');
+        } else {
+          message.error('Failed to create account. Please try again.');
+        }
+        console.error(error);
+      }
     } else {
-      alert("Please fill out all fields");
+      message.error("Please fill out all fields");
     }
   };
 
@@ -139,6 +170,10 @@ const Account = () => {
                 <p className="text-xl font-bold">{account.bankName}</p>
               </div>
               <div>
+                <p className="text-[#516778]">Account Name</p> {/* Added Account Name display */}
+                <p className="text-xl font-bold">{account.accountName}</p>
+              </div>
+              <div>
                 <p className="text-[#516778]">Account Type</p>
                 <p className="text-xl font-bold">{account.accountType}</p>
               </div>
@@ -152,7 +187,7 @@ const Account = () => {
               </div>
               <div>
                 <p className="text-[#516778]">Balance</p>
-                <p className="text-xl font-bold">{account.balance}</p>
+                <p className="text-xl font-bold">${account.balance}</p>
               </div>
             </div>
           </section>
@@ -190,6 +225,15 @@ const Account = () => {
           </div>
 
           <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-500">Account Name:</label> {/* New Account Name input */}
+            <Input
+              placeholder="Enter account name"
+              value={accountName}
+              onChange={(e) => setAccountName(e.target.value)} // Update state
+            />
+          </div>
+
+          <div className="mb-4">
             <label className="block text-sm font-medium text-gray-500">Account Number:</label>
             <Input
               placeholder="Enter account number"
@@ -206,8 +250,9 @@ const Account = () => {
               onChange={(value) => setAccountType(value)}
               style={{ width: '100%' }}
             >
-              <Option value="Savings Account">Savings Account</Option>
-              <Option value="Checking Account">Checking Account</Option>
+              <Option value="checking">Checking Account</Option>
+              <Option value="savings">Savings Account</Option>
+              {/* <Option value="credit">Credit Account</Option>  */}
             </Select>
           </div>
 
