@@ -6,7 +6,6 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -14,11 +13,9 @@ const Login = () => {
       const response = await axiosInstance.post('/users/login', { email, password });
 
       if (response.status === 200) {
-        // Save tokens to localStorage
         localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('refreshToken', response.data.refreshToken);
         
-        // Navigate to overview page after login (use Link to maintain same behavior)
         window.location.href = '/overview';
       } else {
         console.error('Login failed');

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Input, Button } from 'antd';
+import { generateDescription } from '../utils/chatb';
 
 const ChatModal = ({ visible, onClose }) => {
   const [inputMessage, setInputMessage] = useState('');
@@ -8,32 +9,45 @@ const ChatModal = ({ visible, onClose }) => {
   const handleSendMessage = async () => {
     if (inputMessage.trim() === '') return;
 
-    // Update chat history with user message
-    setChatHistory([...chatHistory, { sender: 'You', message: inputMessage }]);
+    const newChatHistory = [...chatHistory, { sender: 'You', message: inputMessage }];
+    setChatHistory(newChatHistory);
 
-    // Call the backend API
     try {
-      const response = await fetch('http://localhost:8000/api/v1/send-message', {
-        method: 'POST',
+      const transactionResponse = await fetch('http://localhost:8000/api/v1/trans', {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem("accessToken")}` 
         },
-        body: JSON.stringify({ message: inputMessage }),
       });
 
-      const data = await response.json();
+      const accountResponse = await fetch('http://localhost:8000/api/v1/accounts', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem("accessToken")}` 
+        },
+      });
 
-      if (response.ok) {
-        // Update chat history with AI response
-        setChatHistory([...chatHistory, { sender: 'You', message: inputMessage }, { sender: 'AI', message: data.response }]);
-        setInputMessage('');
-      } else {
-        console.error(data.error);
-        setChatHistory([...chatHistory, { sender: 'AI', message: 'Error: ' + data.error }]);
+      const transactions = await transactionResponse.json();
+      const accounts = await accountResponse.json();
+
+      if (!transactionResponse.ok || !accountResponse.ok) {
+        throw new Error('Failed to fetch transactions or accounts');
       }
+
+      const aiResponse = await generateDescription(inputMessage, transactions, accounts);
+
+      if (aiResponse) {
+        setChatHistory(prev => [...prev, { sender: 'AI', message: aiResponse }]);
+      } else {
+        setChatHistory(prev => [...prev, { sender: 'AI', message: 'Error: No response from AI.' }]);
+      }
+
+      setInputMessage(''); 
     } catch (error) {
-      console.error('Error sending message:', error);
-      setChatHistory([...chatHistory, { sender: 'AI', message: 'Error: Unable to connect to server' }]);
+      console.error('Error generating message:', error);
+      setChatHistory(prev => [...prev, { sender: 'AI', message: 'Error: Unable to process the message.' }]);
     }
   };
 

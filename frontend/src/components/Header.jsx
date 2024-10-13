@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import ChatModal from './ChatModal'; // Import the ChatModal
+import ChatModal from './ChatModal'; 
 
 function Header({ selectedAccount, handleAccountChange }) {
   const [isChatVisible, setChatVisible] = useState(false);
-  const [username, setUsername] = useState(''); // State to store the username
-  const API_URL = 'http://localhost:8000/api/v1/users/current-user'; // API URL
+  const [username, setUsername] = useState(''); 
+  const API_URL = 'http://localhost:8000/api/v1/users/current-user';
 
-  // Fetch the current user information
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -14,13 +13,13 @@ function Header({ selectedAccount, handleAccountChange }) {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}` // Assuming you're using a token
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}` 
           }
         });
         
         if (response.ok) {
           const data = await response.json();
-          setUsername(data.data.username); // Update username state
+          setUsername(data.data.username); 
         } else {
           console.error("Failed to fetch user info");
         }
@@ -30,7 +29,7 @@ function Header({ selectedAccount, handleAccountChange }) {
     };
 
     fetchUser();
-  }, []); // Fetch user on component mount
+  }, []); 
 
   return (
     <div className='bg-gray-900 text-white p-10'>

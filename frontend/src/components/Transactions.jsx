@@ -10,32 +10,47 @@ const { Option } = Select;
 const columns = [
   { title: "Category", dataIndex: "category", key: "category" },
   { title: "Payee", dataIndex: "payee", key: "payee" },
-  { title: "Date", dataIndex: "date", key: "date",
+  { 
+    title: "Date", 
+    dataIndex: "date", 
+    key: "date",
     render: (text) => moment(text).format("YYYY-MM-DD"),
   },
   { 
     title: "Amount", 
     dataIndex: "amount", 
     key: "amount", 
+    render: (text, record) => {
+      const isExpense = record.type === "expense";
+      return (
+        <span style={{ color: isExpense ? "red" : "green" }}>
+          {isExpense ? `- ${text}` : `+ ${text}`}
+        </span>
+      );
+    }
   },
-  { title: "Account Name", dataIndex: "accountId", key: "accountId", render: (text, record) => record.accountId?.accountName || 'N/A' }, // Access accountName from accountId
+  { 
+    title: "Account Name", 
+    dataIndex: "accountId", 
+    key: "accountId", 
+    render: (text, record) => record.accountId?.accountName || 'N/A' 
+  },
 ];
 
 const Transactions = () => {
-  const API_URL = "http://localhost:8000/api/v1/trans"; // Change to your API URL
+  const API_URL = "http://localhost:8000/api/v1/trans"; 
   const [transactionData, setTransactionData] = useState([]);
   
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newTransaction, setNewTransaction] = useState({
-    accountName: "", // Changed to input field
+    accountName: "", 
     category: "", 
     payee: "", 
     date: "", 
     amount: "", 
-    type: "expense", // Added type for transaction
+    type: "expense", 
   });
 
-  // Fetch transactions on component mount
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -43,7 +58,7 @@ const Transactions = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem("accessToken")}` // Assuming you store JWT token in local storage
+            'Authorization': `Bearer ${localStorage.getItem("accessToken")}` 
           }
         });
         const data = await response.json();
@@ -65,7 +80,7 @@ const Transactions = () => {
   };
 
   const handleOk = async (event) => {
-    event.preventDefault(); // Prevent the default form submission behavior
+    event.preventDefault(); 
 
     const form = event.target;
 
@@ -75,15 +90,15 @@ const Transactions = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem("accessToken")}` // Assuming you store JWT token in local storage
+            'Authorization': `Bearer ${localStorage.getItem("accessToken")}` 
           },
           body: JSON.stringify({
-            accountName: newTransaction.accountName, // Send accountName as input
+            accountName: newTransaction.accountName, 
             category: newTransaction.category,
             payee: newTransaction.payee,
-            amount: parseFloat(newTransaction.amount), // Ensure amount is a number
+            amount: parseFloat(newTransaction.amount), 
             date: newTransaction.date,
-            type: newTransaction.type, // Added type for transaction
+            type: newTransaction.type, 
           })
         });
 
@@ -99,7 +114,7 @@ const Transactions = () => {
         console.error("Error creating transaction:", error);
       }
     } else {
-      form.reportValidity(); // Native browser validation feedback
+      form.reportValidity(); 
     }
   };
 
@@ -119,22 +134,20 @@ const Transactions = () => {
     const headers = columns.map(column => column.title);
     
     const csvContent = [
-      headers.join(','), // Join headers with commas
+      headers.join(','), 
       ...transactionData.map(row => 
         columns.map(column => {
-          // Handle special cases for date and accountName
           if (column.dataIndex === 'date') {
-            return moment(row[column.dataIndex]).format("YYYY-MM-DD"); // Format date as YYYY-MM-DD
+            return moment(row[column.dataIndex]).format("YYYY-MM-DD"); 
           }
           if (column.dataIndex === 'accountId') {
-            return row.accountId?.accountName || 'N/A'; // Extract accountName from accountId
+            return row.accountId?.accountName || 'N/A'; 
           }
-          return row[column.dataIndex] || ''; // Fallback for other columns
+          return row[column.dataIndex] || ''; 
         }).join(',')
       )
     ].join('\n');
   
-    // Create and download the CSV file
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     if (link.download !== undefined) {
@@ -147,14 +160,12 @@ const Transactions = () => {
       document.body.removeChild(link);
     }
   };
-  
 
   return (
     <>
       <Nav />
       <Header />
-      <div className="min-h-screen bg-gray-900 text-white px-10">
-        {/* Filter and Add Button */}
+      <div className="min-h-screen bg-gray-900 text-white px-10 pb-5">
         <div className="flex justify-between">
           <button 
             className="bg-[#0B1739] text-white py-3 px-6 rounded-xl" 
@@ -170,7 +181,6 @@ const Transactions = () => {
           </button>
         </div>
 
-        {/* Transaction History Table */}
         <div className="bg-[#0B1739] mt-10 rounded-lg">
           <h4 className="text-2xl font-semibold py-4 pl-4">Transaction History</h4>
           <Table 
@@ -181,7 +191,6 @@ const Transactions = () => {
           />
         </div>
 
-        {/* Modal for adding a transaction */}
         <Modal
           title="Add Transaction"
           visible={isModalVisible}
@@ -221,13 +230,13 @@ const Transactions = () => {
                 <Option value="housing">Housing</Option>
                 <Option value="utilities">Utilities</Option>
                 <Option value="groceries">Groceries</Option>
-                <Option value="transport">Transportation</Option>
+                <Option value="transportation">Transportation</Option>
                 <Option value="healthcare">Healthcare</Option>
                 <Option value="savings">Savings</Option>
                 <Option value="entertainment">Entertainment</Option>
                 <Option value="shopping">Shopping</Option>
                 <Option value="education">Education</Option>
-                <Option value="misc">Miscellaneous</Option>
+                <Option value="miscellaneous">Miscellaneous</Option>
               </Select>
             </div>
             
@@ -256,10 +265,24 @@ const Transactions = () => {
               <label className="block text-sm font-medium text-gray-500">Account Name</label>
               <Input
                 placeholder="Account Name"
-                value={newTransaction.accountName} // Changed to accountName
-                onChange={(e) => handleInputChange("accountName", e.target.value)} // Handle input change
+                value={newTransaction.accountName}
+                onChange={(e) => handleInputChange("accountName", e.target.value)}
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Transaction Type</label>
+              <Select
+                placeholder="Select Type"
+                onChange={(value) => handleInputChange("type", value)}
+                value={newTransaction.type}
+                className="w-full"
+                required
+              >
+                <Option value="expense">Expense</Option>
+                <Option value="income">Income</Option>
+              </Select>
             </div>
           </form>
         </Modal>

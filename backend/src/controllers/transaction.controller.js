@@ -18,7 +18,7 @@ export const createTransaction = async (req, res) => {
             return res.status(404).json({ message: 'Account not found' });
         }
 
-        console.log("Account id:", account._id);
+        // console.log("Account id:", account._id);
 
         const newTransaction = new Transaction({
             userId,
@@ -29,8 +29,24 @@ export const createTransaction = async (req, res) => {
             amount,
             date,
         });
+
+        if (type === 'expense') {
+            // Subtract amount from account balance
+            account.balance -= amount;
+          } else if (type === 'income') {
+            // Add amount to account balance
+            account.balance += amount;
+          }
+      
+          // Step 4: Save the updated account
+        await account.save();
+
         await newTransaction.save();
-        res.status(201).json(newTransaction);
+        res.status(201).json({
+            message: "Transaction created successfully",
+            transaction: newTransaction,
+            updatedAccount: account,
+          });
     } catch (error) {
         console.error("Error creating transaction:", error.message);
         res.status(400).json({ message: error.message });
@@ -86,6 +102,40 @@ export const getTransactionsByAccount = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const getTransactionsByAccountType = async (req, res) => {
+    const { accountType } = req.params;
+
+    try {
+        const accounts = await Account.find({ accountType });
+
+        if (accounts.length === 0) {
+            return res.status(404).json({ message: "No accounts found for this account type." });
+        }
+
+        const accountIds = accounts.map(account => account._id);
+
+        const transactions = await Transaction.find({ accountId: { $in: accountIds } });
+
+        if (transactions.length === 0) {
+            return res.status(404).json({ message: "No transactions found for this account type." });
+        }
+
+        const transactionsWithAccountNames = transactions.map(transaction => {
+            const account = accounts.find(acc => acc._id.toString() === transaction.accountId.toString());
+            return {
+                ...transaction.toObject(), 
+                accountName: account ? account.accountName : "Unknown" 
+            };
+        });
+
+        res.status(200).json(transactionsWithAccountNames);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 
 // Update a transaction
 export const updateTransaction = async (req, res) => {

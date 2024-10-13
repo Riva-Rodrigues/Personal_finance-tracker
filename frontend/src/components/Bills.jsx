@@ -13,21 +13,21 @@ const Bills = () => {
       item: 'Figma-Yearly Subscription',
       description: 'For advanced security and flexible controls.',
       lastCharge: '2024/07/14',
-      amount: '$150',
+      amount: '150',
     },
     {
       dueDate: '2024/07/30',
       item: 'Adobe',
       description: 'Professional plan for scaling design processes.',
       lastCharge: '2024/07/28',
-      amount: '$200',
+      amount: '200',
     },
     {
       dueDate: '2024/08/10',
       item: 'Electricity',
       description: 'Monthly electricity bill.',
       lastCharge: '2024/07/10',
-      amount: '$200',
+      amount: '200',
     },
   ];
 
@@ -44,9 +44,8 @@ const Bills = () => {
   useEffect(() => {
     const checkInterval = setInterval(() => {
       checkBillsDue();
-    }, 1000 * 60 * 60); // Check every hour
+    }, 1000 * 60 * 60); 
 
-    // Initial check
     checkBillsDue();
 
     return () => clearInterval(checkInterval);
@@ -59,23 +58,22 @@ const Bills = () => {
       const dueDate = moment(bill.dueDate);
       const daysUntilDue = dueDate.diff(today, 'days');
       
-      // Check for bills due today
       if (daysUntilDue === 0) {
         sendNotification(bill, 'due today');
       }
-      // Check for bills due tomorrow
       else if (daysUntilDue === 1) {
         sendNotification(bill, 'due tomorrow');
       }
-      // Check for bills due in 2 days
       else if (daysUntilDue === 2) {
         sendNotification(bill, 'due in 2 days');
+      }
+      else if (daysUntilDue === 3) {
+        sendNotification(bill, 'due in 3 days');
       }
     });
   };
 
   const sendNotification = (bill, timeframe) => {
-    // Browser notification
     if ('Notification' in window) {
       Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
@@ -86,7 +84,6 @@ const Bills = () => {
       });
     }
     
-    // In-app notification
     message.warning(`${bill.item} - ${bill.amount} is ${timeframe}!`);
   };
 
@@ -148,7 +145,7 @@ const Bills = () => {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount) => <span className="font-bold">{amount}</span>,
+      render: (amount) => <span className="font-bold">Rs. {amount}</span>, // Amount without the $ sign
     },
     {
       title: '',
@@ -158,6 +155,7 @@ const Bills = () => {
       ),
     },
   ];
+  
 
   return (
     <>
@@ -233,9 +231,9 @@ const Bills = () => {
             <div>
               <label className="block text-sm font-medium text-gray-500">Amount</label>
               <Input
-                type="text"
+                type="number"
                 name="amount"
-                placeholder="E.g. $200"
+                placeholder="E.g. Rs.200"
                 value={newBill.amount}
                 onChange={handleInputChange}
                 required

@@ -5,7 +5,7 @@ import { SettingOutlined } from '@ant-design/icons';
 import logo from '../assets/logo.png'
 function Nav() {
   const location = useLocation();
-  const currentPath = location.pathname.split('/')[1] || 'overview'; // Default to 'overview' if path is empty
+  const currentPath = location.pathname.split('/')[1] || 'overview';
 
   const navItems = [
     { key: 'overview', label: 'Overview', to: '/overview' },
@@ -18,14 +18,12 @@ function Nav() {
 
   return (
     <header className="flex justify-between items-center bg-[#101828] py-4 px-10 text-white">
-      {/* Logo */}
       <div className="flex items-center space-x-3 text-2xl font-bold">
         <img src={logo} alt="Financy Logo" className="h-8 w-16" />
         <span>financy</span>
     </div>
 
 
-      {/* Navigation Links */}
       <div className="flex-grow">
         <nav className="flex items-center justify-center space-x-8">
           {navItems.map((item) => (
@@ -42,7 +40,6 @@ function Nav() {
         </nav>
       </div>
 
-      {/* Settings Button and Avatar */}
       <div className="flex items-center space-x-4">
         <Button shape="circle" icon={<SettingOutlined />} className="bg-gray-700 text-white" />
         <Avatar className="bg-gray-700" />
