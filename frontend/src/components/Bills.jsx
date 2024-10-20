@@ -20,13 +20,65 @@ const Bills = () => {
 
   useEffect(() => {
     fetchBills();
-
+    scheduleDueBillsDeletion();
     // const checkInterval = setInterval(() => {
     //   checkBillsDue();
     // }, 1000 * 60 * 60); // Check every hour
 
     // return () => clearInterval(checkInterval);
-  }, []); 
+    return () => {
+      const timeoutId = window.localStorage.getItem('deletionTimeoutId');
+      if (timeoutId) {
+        clearTimeout(parseInt(timeoutId));
+      }
+    };
+  }, []);
+  
+
+  const scheduleDueBillsDeletion = () => {
+    const now = moment();
+    const tonight = moment().endOf('day');
+    const msUntilMidnight = tonight.diff(now);
+
+    const timeoutId = setTimeout(() => {
+      deleteExpiredBills();
+      scheduleDueBillsDeletion();
+    }, msUntilMidnight);
+
+    window.localStorage.setItem('deletionTimeoutId', timeoutId.toString());
+  };
+
+
+  const deleteExpiredBills = async () => {
+    const today = moment().startOf('day');
+    
+    const expiredBills = bills.filter(bill => 
+      moment(bill.dueDate).isSame(today, 'day')
+    );
+
+    for (const bill of expiredBills) {
+      try {
+        await axios.delete(`http://localhost:8000/api/v1/bills/${bill._id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        });
+        
+        notification.info({
+          message: 'Bill Deleted',
+          description: `${bill.item} (Rs. ${bill.amount}) has been automatically deleted as it was due today.`,
+        });
+      } catch (error) {
+        console.error('Error deleting expired bill:', error);
+        notification.error({
+          message: 'Error',
+          description: `Failed to delete expired bill: ${bill.item}`,
+        });
+      }
+    }
+    fetchBills();
+  };
+
   
   const fetchBills = async () => {
     try {
@@ -34,7 +86,6 @@ const Bills = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
       });
       setBills(response.data);
-      // Check bills due immediately after fetching
       checkBillsDue(response.data);
     } catch (error) {
       console.error('Error fetching bills:', error);
@@ -49,17 +100,13 @@ const Bills = () => {
 
     billsToCheck.forEach((bill) => {
       const dueDate = moment(bill.dueDate);
-      console.log(`Checking bill: ${bill.item}, Due date: ${dueDate.format('YYYY-MM-DD')}`);
 
-      // Notify for bills due today
       if (dueDate.isSame(today, 'day')) {
         sendNotification(bill, 'due today');
       } 
-      // Notify for bills due in 1 day (tomorrow)
       else if (dueDate.isSame(tomorrow, 'day')) {
         sendNotification(bill, 'due tomorrow');
       } 
-      // Notify for bills due in 2 days
       else if (dueDate.isSame(twoDaysFromNow, 'day')) {
         sendNotification(bill, 'due in 2 days');
       }

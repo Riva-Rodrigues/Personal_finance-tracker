@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button, Avatar } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
+import axios from 'axios';
 import logo from '../assets/logo.png'
+
 function Nav() {
   const location = useLocation();
   const currentPath = location.pathname.split('/')[1] || 'overview';
+  const [initials, setInitials] = useState('');
 
   const navItems = [
     { key: 'overview', label: 'Overview', to: '/overview' },
@@ -15,6 +18,34 @@ function Nav() {
     { key: 'bills', label: 'Bills', to: '/bills' },
     { key: 'predictions', label: 'Predictions', to: '/predictions' },
   ];
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/v1/users/current-user', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+        });
+        const user = response.data;
+        console.log(user);
+        // Extract initials from the user's name (assuming full name is available)
+        const userInitials = getInitials(user.data.username);
+        setInitials(userInitials);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+
+  const getInitials = (name) => {
+    if (!name) return '';
+    return name
+      .replace(/\s+/g, '') 
+      .substring(0, 2)     
+      .toUpperCase();    
+  };
 
   return (
     <header className="flex justify-between items-center bg-[#101828] py-4 px-10 text-white">
@@ -41,8 +72,7 @@ function Nav() {
       </div>
 
       <div className="flex items-center space-x-4">
-        <Button shape="circle" icon={<SettingOutlined />} className="bg-gray-700 text-white" />
-        <Avatar className="bg-gray-700" />
+        <Avatar className="bg-[#155EEF]">{initials || 'U'}</Avatar>
       </div>
     </header>
   );
