@@ -28,15 +28,23 @@ const ChatModal = ({ visible, onClose }) => {
           'Authorization': `Bearer ${localStorage.getItem("accessToken")}` 
         },
       });
+      const billResponse = await fetch('http://localhost:8000/api/v1/bills', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem("accessToken")}` 
+        },
+      });
 
       const transactions = await transactionResponse.json();
       const accounts = await accountResponse.json();
+      const bills = await billResponse.json();
 
-      if (!transactionResponse.ok || !accountResponse.ok) {
+      if (!transactionResponse.ok || !accountResponse.ok || !billResponse.ok) {
         throw new Error('Failed to fetch transactions or accounts');
       }
 
-      const aiResponse = await generateDescription(inputMessage, transactions, accounts);
+      const aiResponse = await generateDescription(inputMessage, transactions, accounts, bills);
 
       if (aiResponse) {
         setChatHistory(prev => [...prev, { sender: 'AI', message: aiResponse }]);
@@ -61,7 +69,7 @@ const ChatModal = ({ visible, onClose }) => {
       className="rounded-lg"
     >
       <div className="flex flex-col h-[400px] overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-100 rounded-lg shadow-md">
+        <div className="flex-1 overflow-y-auto p-4 bg-gray-100 rounded-lg shadow-md mb-2">
           {chatHistory.map((chat, index) => (
             <div key={index} className={`my-2 ${chat.sender === 'You' ? 'text-right' : 'text-left'}`}>
               <span className={`font-bold ${chat.sender === 'You' ? 'text-blue-600' : 'text-gray-800'}`}>

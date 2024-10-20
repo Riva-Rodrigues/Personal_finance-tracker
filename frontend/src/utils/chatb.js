@@ -10,12 +10,13 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
  * @param {string} userText - The user's input/question
  * @param {array} transactions - The user's transaction data
  * @param {array} accounts - The user's account data
+ * @param {array} bills - The user's bills data
  * @returns {string} The generated AI response
  */
-export const generateDescription = async (userText, transactions, accounts) => {
+export const generateDescription = async (userText, transactions, accounts, bills) => {
   try {
     const prompt = `
-      Answer the following user query in 2-3 lines:
+      Answer the following user query in 2-3 lines. The amount should be displayed in Rs:
       User's Question: "${userText}"
 
       Based on the user's transactions:
@@ -23,6 +24,9 @@ export const generateDescription = async (userText, transactions, accounts) => {
 
       And the user's accounts:
       ${JSON.stringify(accounts)}
+
+      And the user's bills:
+      ${JSON.stringify(bills)}
     `;
 
     const result = await model.generateContent(prompt);

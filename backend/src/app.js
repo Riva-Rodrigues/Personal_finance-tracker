@@ -34,4 +34,7 @@ app.use("/api/v1/trans", transactionRouter)
 import { sendMessage } from "./controllers/chat.controller.js";
 app.post("/api/v1/send-message", sendMessage)
 
+import billRouter from "./routes/bill.routes.js";
+app.use("/api/v1/bills", billRouter)
+
 export {app}

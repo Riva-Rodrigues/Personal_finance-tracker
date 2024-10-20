@@ -1,90 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Input, DatePicker, message } from 'antd';
+import { Table, Button, Modal, Input, DatePicker, message, notification } from 'antd';
 import { PlusOutlined, MoreOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import moment from 'moment';
-import Nav from './Nav'
-import Header from './Header'
+import axios from 'axios';
+import Nav from './Nav';
+import Header from './Header';
 
 const Bills = () => {
-  const initialBills = [
-    {
-      dueDate: '2024/07/15',
-      item: 'Figma-Yearly Subscription',
-      description: 'For advanced security and flexible controls.',
-      lastCharge: '2024/07/14',
-      amount: '150',
-    },
-    {
-      dueDate: '2024/07/30',
-      item: 'Adobe',
-      description: 'Professional plan for scaling design processes.',
-      lastCharge: '2024/07/28',
-      amount: '200',
-    },
-    {
-      dueDate: '2024/08/10',
-      item: 'Electricity',
-      description: 'Monthly electricity bill.',
-      lastCharge: '2024/07/10',
-      amount: '200',
-    },
-  ];
-
-  const [bills, setBills] = useState(initialBills);
+  const [bills, setBills] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newBill, setNewBill] = useState({
     dueDate: '',
     item: '',
-    description: '',
+    itemDescription: '',
     lastCharge: '',
     amount: '',
   });
 
   useEffect(() => {
-    const checkInterval = setInterval(() => {
-      checkBillsDue();
-    }, 1000 * 60 * 60); 
+    fetchBills();
 
-    checkBillsDue();
+    // const checkInterval = setInterval(() => {
+    //   checkBillsDue();
+    // }, 1000 * 60 * 60); // Check every hour
 
-    return () => clearInterval(checkInterval);
-  }, [bills]);
+    // return () => clearInterval(checkInterval);
+  }, []); 
+  
+  const fetchBills = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/v1/bills', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+      });
+      setBills(response.data);
+      // Check bills due immediately after fetching
+      checkBillsDue(response.data);
+    } catch (error) {
+      console.error('Error fetching bills:', error);
+      message.error('Failed to fetch bills.');
+    }
+  };
 
-  const checkBillsDue = () => {
+  const checkBillsDue = (billsToCheck = bills) => {
     const today = moment();
-    
-    bills.forEach(bill => {
+    const tomorrow = today.clone().add(1, 'days');
+    const twoDaysFromNow = today.clone().add(2, 'days');
+
+    billsToCheck.forEach((bill) => {
       const dueDate = moment(bill.dueDate);
-      const daysUntilDue = dueDate.diff(today, 'days');
-      
-      if (daysUntilDue === 0) {
+      console.log(`Checking bill: ${bill.item}, Due date: ${dueDate.format('YYYY-MM-DD')}`);
+
+      // Notify for bills due today
+      if (dueDate.isSame(today, 'day')) {
         sendNotification(bill, 'due today');
-      }
-      else if (daysUntilDue === 1) {
+      } 
+      // Notify for bills due in 1 day (tomorrow)
+      else if (dueDate.isSame(tomorrow, 'day')) {
         sendNotification(bill, 'due tomorrow');
-      }
-      else if (daysUntilDue === 2) {
+      } 
+      // Notify for bills due in 2 days
+      else if (dueDate.isSame(twoDaysFromNow, 'day')) {
         sendNotification(bill, 'due in 2 days');
-      }
-      else if (daysUntilDue === 3) {
-        sendNotification(bill, 'due in 3 days');
       }
     });
   };
 
   const sendNotification = (bill, timeframe) => {
-    if ('Notification' in window) {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          new Notification(`Bill ${timeframe}`, {
-            body: `${bill.item} - ${bill.amount} is ${timeframe}!`,
-          });
-        }
-      });
-    }
-    
-    message.warning(`${bill.item} - ${bill.amount} is ${timeframe}!`);
+    // Use Ant Design's notification system
+    notification.open({
+      message: `Bill ${timeframe}`,
+      description: `${bill.item} - Rs. ${bill.amount} is ${timeframe}!`,
+      onClick: () => {
+        console.log('Notification Clicked!');
+      },
+      style: {
+        cursor: 'pointer',
+      },
+    });
+
+    // Also show a message warning in the application
+    // message.warning(`${bill.item} - Rs. ${bill.amount} is ${timeframe}!`);
   };
 
   const showModal = () => {
@@ -100,15 +96,38 @@ const Bills = () => {
     setNewBill({ ...newBill, [fieldName]: dateString });
   };
 
-  const handleAddBill = (e) => {
+  const handleAddBill = async (e) => {
     e.preventDefault();
-    setBills([...bills, { ...newBill, key: bills.length }]);
-    setIsModalVisible(false);
-    setNewBill({ dueDate: '', item: '', description: '', lastCharge: '', amount: '' });
+    try {
+      const response = await axios.post('http://localhost:8000/api/v1/bills', { ...newBill }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+      });
+      setBills([...bills, response.data]); // Add new bill to the state
+      setIsModalVisible(false);
+      setNewBill({ dueDate: '', item: '', itemDescription: '', lastCharge: '', amount: '' });
+    } catch (error) {
+      console.error('Error adding bill:', error);
+      message.error('Failed to add bill. Check your input data and try again.');
+    }
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
+  };
+
+  const deleteBill = async (id) => {
+    try {
+      await axios.delete(`http://localhost:8000/api/v1/bills/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      });
+      setBills(bills.filter((bill) => bill._id !== id));
+      message.success('Bill deleted successfully.');
+    } catch (error) {
+      console.error('Error deleting bill:', error);
+      message.error('Failed to delete bill.');
+    }
   };
 
   const columns = [
@@ -131,31 +150,30 @@ const Bills = () => {
     },
     {
       title: 'Item Description',
-      dataIndex: 'description',
-      key: 'description',
-      render: (description) => <span className="text-gray-400">{description}</span>,
+      dataIndex: 'itemDescription',
+      key: 'itemDescription',
+      render: (itemDescription) => <span className="text-gray-400">{itemDescription}</span>,
     },
     {
       title: 'Last Charge',
       dataIndex: 'lastCharge',
       key: 'lastCharge',
-      render: (lastCharge) => <span className="text-gray-400">{lastCharge}</span>,
+      render: (lastCharge) => <span className="text-gray-400">{moment(lastCharge).format('YYYY-MM-DD')}</span>,
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount) => <span className="font-bold">Rs. {amount}</span>, // Amount without the $ sign
+      render: (amount) => <span className="font-bold">Rs. {amount}</span>,
     },
     {
       title: '',
       key: 'action',
-      render: () => (
-        <Button type="text" shape="circle" icon={<MoreOutlined />} />
+      render: (_, record) => (
+        <Button type="text" shape="circle" icon={<MoreOutlined />} onClick={() => deleteBill(record._id)} />
       ),
     },
   ];
-  
 
   return (
     <>
@@ -211,9 +229,9 @@ const Bills = () => {
               <label className="block text-sm font-medium text-gray-500">Description</label>
               <Input
                 type="text"
-                name="description"
+                name="itemDescription"
                 placeholder="E.g. Description of the bill"
-                value={newBill.description}
+                value={newBill.itemDescription}
                 onChange={handleInputChange}
                 required
               />
