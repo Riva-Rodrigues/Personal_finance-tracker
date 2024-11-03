@@ -17,6 +17,7 @@ function Nav() {
     { key: 'accounts', label: 'Accounts', to: '/accounts' },
     { key: 'bills', label: 'Bills', to: '/bills' },
     { key: 'predictions', label: 'Predictions', to: '/predictions' },
+    { key: 'stocks', label: 'Stocks', to: '/stocks' },
   ];
 
   useEffect(() => {
